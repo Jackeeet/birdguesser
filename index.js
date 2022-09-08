@@ -1,5 +1,5 @@
 import express from 'express';
-import { yesHandler, noHandler } from './src/guesser.js';
+import {yes, no} from './src/guesser.js';
 
 const app = express();
 
@@ -9,16 +9,14 @@ app.listen(3000, () => {
 
 app.use(express.static("./"));
 
-app.get("/", (req, res) => {
-    res.sendFile("./index.html");
-});
+app.get("/", (req, res) =>
+    res.sendFile("./index.html")
+);
 
-app.get("/yes", (req, res) => {
-    let response = yesHandler();
-    res.json(response);
-});
+app.get("/yes", (req, res) =>
+    res.json(yes())
+);
 
-app.get("/no", (req, res) => {
-    let response = noHandler();
-    res.json(response);
-});
+app.get("/no", (req, res) =>
+    res.json(no())
+);

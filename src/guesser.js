@@ -1,15 +1,13 @@
-import {states, infoModes} from './enums.js';
+import {states} from './enums.js';
 import fs from 'fs';
 
 let state;
-let infoMode = infoModes.NONE;
-let prevInfoMode = infoModes.NONE;
 
-let totalRounds = 0;
-let remainingBirdIds = [];
-let remainingQuestionIds = [];
+let totalRounds;
+let remainingBirdIds;
+let remainingQuestionIds;
+let log;
 
-let log = [];
 let lastGuess = null; // todo replace with last log entry
 let lastQuestion = null; // todo replace with last log entry
 
@@ -17,9 +15,13 @@ let stored = null;
 
 const prepare = () => {
     stored = JSON.parse(fs.readFileSync('./src/data.json'));
+    totalRounds = 0;
+    remainingBirdIds = [];
+    remainingQuestionIds = [];
+    log = [];
 
-    let sortedBirds = [...stored.birds];
     // sort birb entries by frequency
+    let sortedBirds = [...stored.birds];
     sortedBirds.sort((a, b) => {
         return b.count - a.count
     });
@@ -51,8 +53,10 @@ const askQuestion = () => {
 };
 
 const chooseNextAction = () => {
-    if (remainingBirdIds.length === 0)
-        return {state: states.FAILED, text: null};
+    if (remainingBirdIds.length === 0) {
+        state = states.FAILED;
+        return {state: state, text: null};
+    }
 
     if (remainingQuestionIds.length === 0)
         return guessMostLikely();
@@ -60,9 +64,11 @@ const chooseNextAction = () => {
     return askQuestion();
 };
 
-export const yesHandler = () => {
-    if (!state || state === states.GUESSED_RIGHT)
+export const yes = () => {
+    let roundStart = !state || state === states.GUESSED_RIGHT || state === states.FAILED;
+    if (roundStart) {
         state = states.INITIAL;
+    }
 
     switch (state) {
         case states.INITIAL:
@@ -74,12 +80,12 @@ export const yesHandler = () => {
             return chooseNextAction();
 
         case states.GUESSED:
-            state = states.INITIAL;
-            return {state: states.GUESSED_RIGHT, text: lastGuess.name};
+            state = states.GUESSED_RIGHT;
+            return {state: state, text: lastGuess.name};
     }
 };
 
-export const noHandler = () => {
+export const no = () => {
     if (state === states.GUESSED) {
         // remove all questions that have the rejected bird as the only answer
         remainingQuestionIds = remainingQuestionIds.filter(id =>
@@ -92,18 +98,4 @@ export const noHandler = () => {
 
     return chooseNextAction();
 };
-
-// const showAllClickHandler = (event, promptArea) => {
-//     if (infoMode === infoModes.SHOW) {
-//         showAllButton.textContent = "Показать базу знаний";
-//         explainArea.hidden = true;
-//         infoMode = prevInfoMode;
-//     }
-//     else {
-//         showAllButton.textContent = "Скрыть базу знаний";
-//         explainArea.hidden = false;
-//         prevInfoMode = infoMode;
-//         infoMode = infoModes.SHOW;
-//     }
-// };
 

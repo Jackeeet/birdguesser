@@ -72,7 +72,13 @@
         };
 
         const showAllClickHandler = () => {
-
+            if (showAllButton.textContent === "Показать базу знаний") {
+                showAllButton.textContent = "Скрыть базу знаний";
+                explainArea.hidden = false;
+            } else {
+                showAllButton.textContent = "Показать базу знаний";
+                explainArea.hidden = true;
+            }
         };
 
         const restartClickHandler = async () => {
@@ -97,7 +103,7 @@
         <button type="button" class="control" id="explain_btn" onclick="explainClickHandler()" hidden>
             Почему такой ответ?
         </button>
-        <button type="button" class="control" id="show_all_btn" hidden>
+        <button type="button" class="control" id="show_all_btn" onclick="showAllClickHandler()" hidden>
             Показать базу знаний
         </button>
         <button type="button" class="control" id="restart_btn" onclick="restartClickHandler()" hidden>
@@ -116,7 +122,9 @@
     const showAllButton = document.getElementById('show_all_btn');
     const restartButton = document.getElementById("restart_btn");
 
-    restartButton.addEventListener("click", () => window.location.href = window.location.href);
+    restartButton.addEventListener("click", () =>
+        window.location.href = window.location.href
+    );
 </script>
 </body>
 </html>
