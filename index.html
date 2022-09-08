@@ -8,83 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Overpass&display=swap" rel="stylesheet">
-    <script type="text/javascript">
-        const showGuess = (guess) => {
-            prompt.innerText = `Это ${guess}!`;
-            explainButton.hidden = false;
-        };
-
-        const showQuestion = (question) => {
-            prompt.innerText = `${question}?`;
-            explainButton.hidden = true;
-        };
-
-        const showControls = () => {
-            noButton.hidden = true;
-            yesButton.hidden = true;
-            restartButton.hidden = false;
-            showAllButton.hidden = false;
-        };
-
-        const handleResponse = async response => {
-            let json = await response.json();
-            if (json.state === "guessed") {
-                showGuess(json.text, prompt);
-            } else if (json.state === "guessed_right") {
-                prompt.innerText = `:> ${json.text} <:`;
-                showControls();
-            } else if (json.state === "failed") {
-                prompt.innerText = "Сдаюсь.";
-                explainButton.hidden = true;
-                showControls();
-            } else if (json.state === "question") {
-                showQuestion(json.text, prompt);
-            }
-        }
-
-        const yesClickHandler = async () => {
-            let response = await fetch("/yes");
-            if (response.ok) {
-                document.getElementById('no_btn').disabled = false;
-                await handleResponse(response);
-            } else {
-                console.log("yesClickHandler failed");
-            }
-        };
-
-        const noClickHandler = async () => {
-            let response = await fetch("/no");
-            if (response.ok) {
-                await handleResponse(response);
-            } else {
-                console.log("noCLickHandler failed");
-            }
-        };
-
-        const explainClickHandler = () => {
-            if (explainButton.textContent === "Почему такой ответ?") {
-                explainButton.textContent = "Скрыть разбор ответа";
-                explainArea.hidden = false;
-            } else {
-                explainButton.textContent = "Почему такой ответ?";
-                explainArea.hidden = true;
-            }
-        };
-
-        const showAllClickHandler = () => {
-            if (showAllButton.textContent === "Показать базу знаний") {
-                showAllButton.textContent = "Скрыть базу знаний";
-                explainArea.hidden = false;
-            } else {
-                showAllButton.textContent = "Показать базу знаний";
-                explainArea.hidden = true;
-            }
-        };
-
-        const restartClickHandler = async () => {
-            await fetch("/");
-        };
-    </script>
 </head>
 <body>
 <div class="main">
@@ -103,28 +26,17 @@
         <button type="button" class="control" id="explain_btn" onclick="explainClickHandler()" hidden>
             Почему такой ответ?
         </button>
-        <button type="button" class="control" id="show_all_btn" onclick="showAllClickHandler()" hidden>
+        <button type="button" class="control" id="data_btn" onclick="dataClickHandler()" hidden>
             Показать базу знаний
         </button>
-        <button type="button" class="control" id="restart_btn" onclick="restartClickHandler()" hidden>
+        <button type="button" class="control" id="restart_btn" hidden>
             Начать сначала
         </button>
     </div>
     <div class="explain" id="explain_area" hidden></div>
+    <div class="explain" id="data_area" hidden></div>
 </div>
 
-<script type="text/javascript">
-    const prompt = document.getElementById('prompt');
-    const explainArea = document.getElementById("explain_area");
-    const yesButton = document.getElementById('yes_btn');
-    const noButton = document.getElementById('no_btn');
-    const explainButton = document.getElementById('explain_btn');
-    const showAllButton = document.getElementById('show_all_btn');
-    const restartButton = document.getElementById("restart_btn");
-
-    restartButton.addEventListener("click", () =>
-        window.location.href = window.location.href
-    );
-</script>
+<script type="text/javascript" src="./handlers.js"></script>
 </body>
 </html>
