@@ -6,8 +6,7 @@ export const states = {
     FAILED: "failed"
 };
 
-export const infoModes = {
-    NONE: 0,
-    EXPLAIN: 1,
-    SHOW: 2
-};
+export const entryKinds = {
+    BIRD: 0,
+    QUESTION: 1
+}

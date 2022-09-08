@@ -15,41 +15,6 @@ const showControls = () => {
     dataButton.hidden = false;
 };
 
-const handleResponse = async response => {
-    let json = await response.json();
-    if (json.state === "guessed") {
-        showGuess(json.text, prompt);
-    } else if (json.state === "guessed_right") {
-        prompt.innerText = `:> ${json.text} <:`;
-        showControls();
-    } else if (json.state === "failed") {
-        prompt.innerText = "Сдаюсь.";
-        explainButton.hidden = true;
-        showControls();
-    } else if (json.state === "question") {
-        showQuestion(json.text, prompt);
-    }
-}
-
-const yesClickHandler = async () => {
-    let response = await fetch("/yes");
-    if (response.ok) {
-        document.getElementById('no_btn').disabled = false;
-        await handleResponse(response);
-    } else {
-        console.log("yesClickHandler failed");
-    }
-};
-
-const noClickHandler = async () => {
-    let response = await fetch("/no");
-    if (response.ok) {
-        await handleResponse(response);
-    } else {
-        console.log("noCLickHandler failed");
-    }
-};
-
 const showDataArea = () => {
     hideExplainArea();
     dataButton.textContent = "Скрыть базу знаний";
@@ -64,25 +29,86 @@ const showExplainArea = () => {
 
 const hideExplainArea = () => {
     explainButton.textContent = "Почему такой ответ?";
+    explainArea.innerText = "";
     explainArea.hidden = true;
 };
 
 const hideDataArea = () => {
     dataButton.textContent = "Показать базу знаний";
-    explainArea.hidden = true;
+    dataArea.hidden = true;
 };
 
-const explainClickHandler = () => {
-    if (explainButton.textContent === "Почему такой ответ?") {
-        showExplainArea();
+const handleYesNoResponse = async response => {
+    let json = await response.json();
+    if (json.state === "guessed") {
+        showGuess(json.text, prompt);
+    } else if (json.state === "guessed_right") {
+        prompt.innerText = `:> ${json.text} <:`;
+        showControls();
+    } else if (json.state === "failed") {
+        prompt.innerText = "Сдаюсь.";
+        explainButton.hidden = true;
+        hideExplainArea();
+        showControls();
+    } else if (json.state === "question") {
+        showQuestion(json.text, prompt);
+    }
+}
+
+const yesClickHandler = async () => {
+    let response = await fetch("/yes");
+    if (response.ok) {
+        document.getElementById('no_btn').disabled = false;
+        await handleYesNoResponse(response);
+    } else {
+        console.log("yesClickHandler failed");
+    }
+};
+
+const noClickHandler = async () => {
+    let response = await fetch("/no");
+    if (response.ok) {
+        hideExplainArea();
+        await handleYesNoResponse(response);
+    } else {
+        console.log("noCLickHandler failed");
+    }
+};
+
+function buildLogString(json) {
+    if (json.length === 1) {
+        return `${json[0].value.name} - наиболее вероятный ответ (вероятность ${json[0].probability}%).`;
+    }
+
+    let log = "";
+    for (let i = 0; i < json.length - 1; i++) {
+        const item = json[i];
+        const text = item.kind === 0 ? item.value.name : item.value.text;
+        log += `[${item.id + 1}] ${text}? ${item.isTrue ? "Да" : "Нет"}\n`;
+    }
+    log += `Следовательно, это ${json[json.length - 1].value.name}.`;
+    return log;
+}
+
+const explainClickHandler = async () => {
+    if (explainButton.textContent.trim() === "Почему такой ответ?") {
+        let response = await fetch("/log");
+        if (response.ok) {
+            let json = await response.json();
+            explainArea.innerText = buildLogString(json);
+            showExplainArea();
+        } else {
+            console.log("explainClickHandler failed");
+        }
+
     } else {
         hideExplainArea();
     }
 };
 
 const dataClickHandler = () => {
-    if (dataButton.textContent === "Показать базу знаний") {
-        showDataArea()
+    if (dataButton.textContent.trim() === "Показать базу знаний") {
+        showDataArea();
     } else {
         hideDataArea();
     }

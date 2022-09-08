@@ -1,9 +1,10 @@
-import {states} from './enums.js';
+import {states, entryKinds} from './enums.js';
 import fs from 'fs';
 
 let state;
+let iteration;
 
-let totalRounds;
+let totalCount;
 let remainingBirdIds;
 let remainingQuestionIds;
 let log;
@@ -15,7 +16,8 @@ let stored = null;
 
 const prepare = () => {
     stored = JSON.parse(fs.readFileSync('./src/data.json'));
-    totalRounds = 0;
+    totalCount = 0;
+    iteration = 0;
     remainingBirdIds = [];
     remainingQuestionIds = [];
     log = [];
@@ -28,7 +30,7 @@ const prepare = () => {
 
     for (const bird of sortedBirds) {
         remainingBirdIds.push(bird.id);
-        totalRounds += bird.count;
+        totalCount += bird.count;
     }
 
     stored.questions.forEach((q) => {
@@ -36,20 +38,45 @@ const prepare = () => {
     });
 };
 
+const addLogEntry = (entryKind, value) => {
+    let probability = entryKind === entryKinds.BIRD ? 100 * value.count / totalCount : null;
+    if (probability) {
+        probability = Math.round((probability + Number.EPSILON) * 100) / 100
+    }
+
+    log.push({
+        id: iteration,
+        kind: entryKind,
+        value: value,
+        probability: probability,
+        isTrue: null
+    });
+    iteration += 1;
+};
+
 const guessMostLikely = () => {
     const likelyBirdId = remainingBirdIds[0];
     remainingBirdIds = remainingBirdIds.filter(id => id !== likelyBirdId);
-    lastGuess = stored.birds[likelyBirdId];
+    const bird = stored.birds[likelyBirdId];
+
+    addLogEntry(entryKinds.BIRD, bird);
+    totalCount -= bird.count;
+    lastGuess = bird;
+
     state = states.GUESSED;
-    return {state: state, text: lastGuess.name};
+    return {state: state, text: bird.name};
 };
 
 const askQuestion = () => {
     const questionId = remainingQuestionIds[0];
     remainingQuestionIds = remainingQuestionIds.filter(id => id !== questionId);
-    lastQuestion = stored.questions[questionId];
+    const question = stored.questions[questionId];
+
+    addLogEntry(entryKinds.QUESTION, question);
+    lastQuestion = question;
+
     state = states.QUESTION;
-    return {state: state, text: lastQuestion.text};
+    return {state: state, text: question.text};
 };
 
 const chooseNextAction = () => {
@@ -68,6 +95,8 @@ export const yes = () => {
     let roundStart = !state || state === states.GUESSED_RIGHT || state === states.FAILED;
     if (roundStart) {
         state = states.INITIAL;
+    } else {
+        log[log.length - 1].isTrue = true;
     }
 
     switch (state) {
@@ -76,7 +105,9 @@ export const yes = () => {
             return guessMostLikely();
 
         case states.QUESTION:
-            remainingBirdIds = remainingBirdIds.filter(id => lastQuestion.birds.includes(id));
+            remainingBirdIds = remainingBirdIds.filter(id =>
+                lastQuestion.birds.includes(id)
+            );
             return chooseNextAction();
 
         case states.GUESSED:
@@ -86,6 +117,7 @@ export const yes = () => {
 };
 
 export const no = () => {
+    log[log.length - 1].isTrue = false;
     if (state === states.GUESSED) {
         // remove all questions that have the rejected bird as the only answer
         remainingQuestionIds = remainingQuestionIds.filter(id =>
@@ -93,9 +125,12 @@ export const no = () => {
             stored.questions[id].birds[0] !== lastGuess.id
         );
     } else if (state === states.QUESTION) {
-        remainingBirdIds = remainingBirdIds.filter(id => !lastQuestion.birds.includes(id));
+        remainingBirdIds = remainingBirdIds.filter(id =>
+            !lastQuestion.birds.includes(id)
+        );
     }
 
     return chooseNextAction();
 };
 
+export const showLog = () => log;

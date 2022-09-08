@@ -1,5 +1,5 @@
 import express from 'express';
-import {yes, no} from './src/guesser.js';
+import {yes, no, showLog} from './src/guesser.js';
 
 const app = express();
 
@@ -19,4 +19,8 @@ app.get("/yes", (req, res) =>
 
 app.get("/no", (req, res) =>
     res.json(no())
+);
+
+app.get("/log", (req, res) =>
+    res.json(showLog())
 );
