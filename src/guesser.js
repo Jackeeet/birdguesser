@@ -1,4 +1,5 @@
 import {states, entryKinds} from './enums.js';
+import {equalSets} from "./utils.js";
 import fs from 'fs';
 
 let state;
@@ -79,6 +80,12 @@ const askQuestion = () => {
     return {state: state, text: question.text};
 };
 
+const removeInconclusiveQuestions = () => {
+    remainingQuestionIds = remainingQuestionIds.filter(qId =>
+        !equalSets(stored.questions[qId].birds, remainingBirdIds)
+    );
+};
+
 const chooseNextAction = () => {
     if (remainingBirdIds.length === 0) {
         state = states.FAILED;
@@ -88,6 +95,7 @@ const chooseNextAction = () => {
     if (remainingQuestionIds.length === 0)
         return guessMostLikely();
 
+    removeInconclusiveQuestions();
     return askQuestion();
 };
 

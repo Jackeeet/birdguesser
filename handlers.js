@@ -1,10 +1,10 @@
 const showGuess = (guess) => {
-    prompt.innerText = `Это ${guess}!`;
+    textArea.innerText = `Это ${guess}!`;
     explainButton.hidden = false;
 };
 
 const showQuestion = (question) => {
-    prompt.innerText = `${question}?`;
+    textArea.innerText = `${question}?`;
     explainButton.hidden = true;
 };
 
@@ -41,17 +41,17 @@ const hideDataArea = () => {
 const handleYesNoResponse = async response => {
     let json = await response.json();
     if (json.state === "guessed") {
-        showGuess(json.text, prompt);
+        showGuess(json.text, textArea);
     } else if (json.state === "guessed_right") {
-        prompt.innerText = `:> ${json.text} <:`;
+        textArea.innerText = `:> ${json.text} <:`;
         showControls();
     } else if (json.state === "failed") {
-        prompt.innerText = "Сдаюсь.";
+        textArea.innerText = "Сдаюсь.";
         explainButton.hidden = true;
         hideExplainArea();
         showControls();
     } else if (json.state === "question") {
-        showQuestion(json.text, prompt);
+        showQuestion(json.text, textArea);
     }
 }
 
@@ -114,7 +114,7 @@ const dataClickHandler = () => {
     }
 };
 
-const prompt = document.getElementById('prompt');
+const textArea = document.getElementById('prompt');
 const explainArea = document.getElementById("explain_area");
 const dataArea = document.getElementById("data_area");
 
