@@ -34,7 +34,20 @@
         </button>
     </div>
     <div class="explain" id="explain_area" hidden></div>
-    <div class="explain" id="data_area" hidden></div>
+    <div class="explain" id="data_area">
+        <div class="data__options" id="data__options">
+            <button type="button" class="data__control">Вся база знаний</button>
+            <div>
+                <label>
+                    Конкретная птица:
+                    <input type="text"/>
+                </label>
+                <button type="button" class="data__control">Показать</button>
+            </div>
+        </div>
+        <div class="data" id="data">
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript" src="./handlers.js"></script>
