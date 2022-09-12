@@ -1,144 +1,113 @@
-import {states, entryKinds} from './enums.js';
-import {equalSets} from "./utils.js";
+import {states} from './enums.js';
 import fs from 'fs';
 
 let state;
-let iteration;
-
-let totalCount;
-let remainingBirdIds;
-let remainingQuestionIds;
+let current;
 let log;
-
-let lastGuess = null; // todo replace with last log entry
-let lastQuestion = null; // todo replace with last log entry
-
 let stored = null;
 
-const prepare = () => {
-    stored = JSON.parse(fs.readFileSync('./src/data.json'));
-    totalCount = 0;
-    iteration = 0;
-    remainingBirdIds = [];
-    remainingQuestionIds = [];
-    log = [];
+const moveLeft = () => current = 2 * current + 1;
 
-    // sort birb entries by frequency
-    let sortedBirds = [...stored.birds];
-    sortedBirds.sort((a, b) => {
-        return b.count - a.count
-    });
+const moveRight = () => current = 2 * current + 2;
 
-    for (const bird of sortedBirds) {
-        remainingBirdIds.push(bird.id);
-        totalCount += bird.count;
-    }
-
-    stored.questions.forEach((q) => {
-        remainingQuestionIds.push(q.id);
-    });
+const getBird = () => {
+    return stored[current].bird;
 };
 
-const addLogEntry = (entryKind, value) => {
-    let probability = entryKind === entryKinds.BIRD ? 100 * value.count / totalCount : null;
-    if (probability) {
-        probability = Math.round((probability + Number.EPSILON) * 100) / 100
-    }
+const getQuestion = () => {
+    return stored[current].question;
+}
 
+const bird = () => {
     log.push({
-        id: iteration,
-        kind: entryKind,
-        value: value,
-        probability: probability,
-        isTrue: null
+        text: getBird(),
+        answer: null
     });
-    iteration += 1;
-};
+    state = states.BIRD;
+    return {state: state, text: getBird()}
+}
 
-const guessMostLikely = () => {
-    const likelyBirdId = remainingBirdIds[0];
-    remainingBirdIds = remainingBirdIds.filter(id => id !== likelyBirdId);
-    const bird = stored.birds[likelyBirdId];
-
-    addLogEntry(entryKinds.BIRD, bird);
-    totalCount -= bird.count;
-    lastGuess = bird;
-
-    state = states.GUESSED;
-    return {state: state, text: bird.name};
-};
-
-const askQuestion = () => {
-    const questionId = remainingQuestionIds[0];
-    remainingQuestionIds = remainingQuestionIds.filter(id => id !== questionId);
-    const question = stored.questions[questionId];
-
-    addLogEntry(entryKinds.QUESTION, question);
-    lastQuestion = question;
-
+const question = () => {
+    log.push({
+        text: getQuestion(),
+        answer: null
+    });
     state = states.QUESTION;
-    return {state: state, text: question.text};
+    return {state: state, text: getQuestion()};
+}
+
+const success = () => {
+    state = states.GUESSED;
+    return {state: state, text: getBird()}
+}
+
+const failure = () => {
+    state = states.FAILED;
+    return {state: state, text: null}
 };
 
-const removeInconclusiveQuestions = () => {
-    remainingQuestionIds = remainingQuestionIds.filter(qId =>
-        !equalSets(stored.questions[qId].birds, remainingBirdIds)
-    );
+const initialize = () => {
+    stored = JSON.parse(fs.readFileSync('./src/data.json'));
+    current = 0;
+    log = [];
 };
 
-const chooseNextAction = () => {
-    if (remainingBirdIds.length === 0) {
-        state = states.FAILED;
-        return {state: state, text: null};
+export const yes = (initial) => {
+    if (initial) {
+        initialize();
+        return bird();
     }
 
-    if (remainingQuestionIds.length === 0)
-        return guessMostLikely();
-
-    removeInconclusiveQuestions();
-    return askQuestion();
-};
-
-export const yes = () => {
-    let roundStart = !state || state === states.GUESSED_RIGHT || state === states.FAILED;
-    if (roundStart) {
-        state = states.INITIAL;
-    } else {
-        log[log.length - 1].isTrue = true;
-    }
-
+    log[log.length - 1].answer = true;
     switch (state) {
-        case states.INITIAL:
-            prepare();
-            return guessMostLikely();
-
+        case states.BIRD:
+            return success();
         case states.QUESTION:
-            remainingBirdIds = remainingBirdIds.filter(id =>
-                lastQuestion.birds.includes(id)
-            );
-            return chooseNextAction();
-
-        case states.GUESSED:
-            state = states.GUESSED_RIGHT;
-            return {state: state, text: lastGuess.name};
+            moveLeft();
+            return getBird() !== null ? bird() : failure();
     }
 };
 
 export const no = () => {
-    log[log.length - 1].isTrue = false;
-    if (state === states.GUESSED) {
-        // remove all questions that have the rejected bird as the only answer
-        remainingQuestionIds = remainingQuestionIds.filter(id =>
-            stored.questions[id].birds.length !== 1 ||
-            stored.questions[id].birds[0] !== lastGuess.id
-        );
-    } else if (state === states.QUESTION) {
-        remainingBirdIds = remainingBirdIds.filter(id =>
-            !lastQuestion.birds.includes(id)
-        );
+    log[log.length - 1].answer = false;
+    switch (state) {
+        case states.BIRD:
+            return getQuestion() !== null ? question() : failure();
+        case states.QUESTION:
+            moveRight();
+            return getBird() !== null ? bird() : failure();
+    }
+};
+
+const storedBirdInfo = index => {
+    let parent = null;
+    if (index > 0) {
+        const parentIndex = index % 2 === 0 ? Math.floor((index - 1) / 2) : Math.floor(index / 2);
+        parent = stored[parentIndex].bird;
     }
 
-    return chooseNextAction();
+    return {
+        bird: stored[index].bird,
+        parent: parent,
+        question: stored[index].question,
+        children: [
+            stored[2 * index + 1].bird,
+            stored[2 * index + 2].bird
+        ]
+    }
+}
+
+export const showBird = name => {
+    name = name.trim();
+    for (let i = 0; i < stored.length; i++) {
+        if (stored[i].bird === name) {
+            return storedBirdInfo(i);
+        }
+    }
+
+    return {bird: null}
 };
+
+export const showStored = () => stored;
 
 export const showLog = () => log;

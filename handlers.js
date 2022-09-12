@@ -40,9 +40,11 @@ const hideDataArea = () => {
 
 const handleYesNoResponse = async response => {
     let json = await response.json();
-    if (json.state === "guessed") {
+    if (json.state === "bird") {
         showGuess(json.text, textArea);
-    } else if (json.state === "guessed_right") {
+    } else if (json.state === "question") {
+        showQuestion(json.text, textArea);
+    } else if (json.state === "guessed") {
         textArea.innerText = `:> ${json.text} <:`;
         showControls();
     } else if (json.state === "failed") {
@@ -50,8 +52,6 @@ const handleYesNoResponse = async response => {
         explainButton.hidden = true;
         hideExplainArea();
         showControls();
-    } else if (json.state === "question") {
-        showQuestion(json.text, textArea);
     }
 }
 
@@ -75,18 +75,26 @@ const noClickHandler = async () => {
     }
 };
 
-function buildLogString(json) {
+const restartClickHandler = async () => {
+    let response = await fetch("/reset");
+    if (response.ok) {
+        window.location.reload();
+    } else {
+        console.log("restartClickHandler failed");
+    }
+}
+
+const buildLogString = json => {
     if (json.length === 1) {
-        return `${json[0].value.name} - наиболее вероятный ответ (вероятность ${json[0].probability}%).`;
+        return `${json[0].text} - корень базы знаний.`;
     }
 
     let log = "";
     for (let i = 0; i < json.length - 1; i++) {
-        const item = json[i];
-        const text = item.kind === 0 ? item.value.name : item.value.text;
-        log += `[${item.id + 1}] ${text}? ${item.isTrue ? "Да" : "Нет"}\n`;
+        log += `${json[i].text}? ${json[i].answer ? 'Да' : 'Нет'}\n`;
     }
-    log += `Следовательно, это ${json[json.length - 1].value.name}.`;
+
+    log += `Следовательно, это ${json[json.length - 1].text}.`;
     return log;
 }
 
@@ -114,16 +122,48 @@ const dataClickHandler = () => {
     }
 };
 
+const showAllClickHandler = async () => {
+    if (showAllButton.textContent.trim() === "Все птицы") {
+        let response = await fetch("/show/all");
+        if (response.ok) {
+            let json = await response.json();
+            showAllButton.textContent = "Скрыть птиц";
+            dataView.innerText = json;
+        } else {
+            console.log("showAllClickHandler failed");
+        }
+    } else {
+        showAllButton.textContent = "Все птицы";
+        dataView.innerText = "";
+    }
+};
+
+const searchClickHandler = async () => {
+    const searchTerm = searchInput.value.trim();
+    let response = await fetch(`/show?bird=${searchTerm}`);
+    if (response.ok) {
+        let json = await response.json();
+        if (json.bird === null) {
+            dataView.innerText = "Нет данных";
+        } else {
+            dataView.innerText = json.bird;
+        }
+    } else {
+        console.log("searchClickHandler failed");
+    }
+};
+
 const textArea = document.getElementById('prompt');
 const explainArea = document.getElementById("explain_area");
 const dataArea = document.getElementById("data_area");
+const dataView = document.getElementById("data_view");
+
+const searchInput = document.getElementById('bird_search_input');
 
 const yesButton = document.getElementById('yes_btn');
 const noButton = document.getElementById('no_btn');
 const explainButton = document.getElementById('explain_btn');
 const dataButton = document.getElementById('data_btn');
 const restartButton = document.getElementById("restart_btn");
-
-restartButton.addEventListener("click", () =>
-    window.location.href = window.location.href
-);
+const showAllButton = document.getElementById('show_all_btn');
+const searchButton = document.getElementById('bird_search_btn');
