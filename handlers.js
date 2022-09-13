@@ -56,7 +56,14 @@ const handleYesNoResponse = async response => {
 }
 
 const yesClickHandler = async () => {
-    let response = await fetch("/yes");
+    let response;
+    if (initial) {
+        response = await fetch("/yes?init=1");
+        initial = false;
+    } else {
+        response = await fetch("/yes?init=0");
+    }
+
     if (response.ok) {
         document.getElementById('no_btn').disabled = false;
         await handleYesNoResponse(response);
@@ -76,12 +83,7 @@ const noClickHandler = async () => {
 };
 
 const restartClickHandler = async () => {
-    let response = await fetch("/reset");
-    if (response.ok) {
-        window.location.reload();
-    } else {
-        console.log("restartClickHandler failed");
-    }
+    window.location.reload();
 }
 
 const buildLogString = json => {
@@ -167,3 +169,5 @@ const dataButton = document.getElementById('data_btn');
 const restartButton = document.getElementById("restart_btn");
 const showAllButton = document.getElementById('show_all_btn');
 const searchButton = document.getElementById('bird_search_btn');
+
+let initial = true;

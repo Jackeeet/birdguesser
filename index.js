@@ -2,7 +2,6 @@ import express from 'express';
 import {yes, no, showLog, showStored, showBird} from './src/guesser.js';
 
 const app = express();
-let initial = true;
 
 app.listen(3000, () => {
     console.log("app started");
@@ -11,18 +10,12 @@ app.listen(3000, () => {
 app.use(express.static("./"));
 
 app.get("/", (req, res) => {
-    initial = true;
     return res.sendFile("./index.html")
 });
 
-app.get("/reset", (req, res) => {
-    initial = true;
-    return res.sendStatus(200);
-});
-
 app.get("/yes", (req, res) => {
+    let initial = req.query.init === "1";
     let response = yes(initial);
-    initial = false;
     res.json(response);
 });
 

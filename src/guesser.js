@@ -79,6 +79,7 @@ export const no = () => {
     }
 };
 
+// todo handle cases where the same bird shows up in 2 different nodes
 const storedBirdInfo = index => {
     let parent = null;
     if (index > 0) {
