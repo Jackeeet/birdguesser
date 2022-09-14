@@ -15,6 +15,10 @@
         Вы загадали птицу?
     </div>
     <div>
+        <input type="text" id="new_bird_input" hidden/>
+        <button type="button" id="save_input" onclick="saveInputClickHandler()" hidden>Сохранить</button>
+    </div>
+    <div>
         <button type="button" class="answer" id="yes_btn" onclick="yesClickHandler()">
             Да
         </button>
@@ -26,11 +30,11 @@
         <button type="button" class="control" id="explain_btn" onclick="explainClickHandler()" hidden>
             Почему такой ответ?
         </button>
-        <button type="button" class="control" id="new_bird_button" onclick="" hidden>
-            Добавить правильный ответ
-        </button>
         <button type="button" class="control" id="data_btn" onclick="dataClickHandler()" hidden>
             Показать базу знаний
+        </button>
+        <button type="button" class="control" id="new_bird_button" onclick="newBirdClickHandler()" hidden>
+            Добавить правильный ответ
         </button>
         <button type="button" class="control" id="restart_btn" onclick="restartClickHandler()" hidden>
             Начать сначала

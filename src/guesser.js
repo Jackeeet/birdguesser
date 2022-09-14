@@ -1,14 +1,23 @@
 import {states} from './enums.js';
 import fs from 'fs';
 
+const jsonPath = './src/data.json';
+
 let state;
 let current;
+let depth;
 let log;
-let stored = null;
+let stored;
 
-const moveLeft = () => current = 2 * current + 1;
+const moveLeft = () => {
+    depth += 1;
+    current = 2 * current + 1;
+};
 
-const moveRight = () => current = 2 * current + 2;
+const moveRight = () => {
+    depth += 1;
+    current = 2 * current + 2;
+}
 
 const getBird = () => {
     return stored[current].bird;
@@ -47,7 +56,8 @@ const failure = () => {
 };
 
 const initialize = () => {
-    stored = JSON.parse(fs.readFileSync('./src/data.json'));
+    stored = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+    depth = 0;
     current = 0;
     log = [];
 };
@@ -79,7 +89,6 @@ export const no = () => {
     }
 };
 
-// todo handle cases where the same bird shows up in 2 different nodes
 const storedBirdInfo = index => {
     let parent = null;
     if (index > 0) {
@@ -112,3 +121,31 @@ export const showBird = name => {
 export const showStored = () => stored;
 
 export const showLog = () => log;
+
+const addNextLevel = () => {
+    for (let i = 0; i < Math.pow(2, depth + 1); i++)
+        stored.push({bird: null, question: null});
+}
+
+export const addBird = name => {
+    if (stored[current].bird === null) {
+        stored[current] = {bird: name, question: null};
+        fs.writeFileSync(jsonPath, JSON.stringify(stored));
+        return {ask: false};
+    } else {
+        let newLeafNeeded = current * 2 + 2 >= stored.length;
+        if (newLeafNeeded) {
+            addNextLevel();
+        }
+
+        stored[2 * current + 1] = {bird: name, question: null};
+        fs.writeFileSync(jsonPath, JSON.stringify(stored));
+        return {ask: true};
+    }
+};
+
+export const addQuestion = text => {
+    stored[current].question = text;
+    moveLeft();
+    fs.writeFileSync(jsonPath, JSON.stringify(stored));
+};

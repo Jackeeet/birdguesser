@@ -8,11 +8,23 @@ const showQuestion = (question) => {
     explainButton.hidden = true;
 };
 
+const showSuccess = (text, textArea) => {
+    textArea.innerText = `:> ${text} <:`;
+    hideInputs();
+    showControls();
+};
+
 const showControls = () => {
     noButton.hidden = true;
     yesButton.hidden = true;
     restartButton.hidden = false;
     dataButton.hidden = false;
+};
+
+const hideControls = () => {
+    restartButton.hidden = true;
+    dataButton.hidden = true;
+    newBirdButton.hidden = true;
 };
 
 const showDataArea = () => {
@@ -38,18 +50,30 @@ const hideDataArea = () => {
     dataArea.hidden = true;
 };
 
+const showInputs = () => {
+    newBirdInput.hidden = false;
+    saveInputButton.hidden = false;
+};
+
+const hideInputs = () => {
+    newBirdInput.value = "";
+    newBirdInput.hidden = true;
+    saveInputButton.hidden = true;
+};
+
 const handleYesNoResponse = async response => {
     let json = await response.json();
     if (json.state === "bird") {
+        lastBird = json.text;
         showGuess(json.text, textArea);
     } else if (json.state === "question") {
         showQuestion(json.text, textArea);
     } else if (json.state === "guessed") {
-        textArea.innerText = `:> ${json.text} <:`;
-        showControls();
+        showSuccess(json.text, textArea);
     } else if (json.state === "failed") {
         textArea.innerText = "Сдаюсь.";
         explainButton.hidden = true;
+        newBirdButton.hidden = false;
         hideExplainArea();
         showControls();
     }
@@ -155,12 +179,67 @@ const searchClickHandler = async () => {
     }
 };
 
+const newBirdClickHandler = () => {
+    hideDataArea();
+    hideControls();
+    showInputs();
+    textArea.innerText = "Какую птицу вы загадали?";
+    inputState = "bird";
+};
+
+const saveBird = async enteredValue => {
+    let response = await fetch(`/add/bird?name=${enteredValue}`);
+    if (response.ok) {
+        let json = await response.json();
+        if (json.ask) {
+            inputState = "question";
+            textArea.innerText = `Какое свойство отличает "${enteredValue}" от "${lastBird}"?`;
+            newBirdInput.value = "";
+            lastBird = enteredValue;
+        } else {
+            inputState = null;
+            showSuccess(enteredValue, textArea);
+        }
+    } else {
+        console.log("couldn't add bird");
+    }
+};
+
+const saveQuestion = async enteredValue => {
+    let response = await fetch(`/add/question?text=${enteredValue}`);
+    if (response.ok) {
+        inputState = null;
+        showSuccess(lastBird, textArea);
+    } else {
+        console.log("couldn't add question");
+    }
+};
+
+const cleanInput = input => {
+    let enteredValue = input.trim().toLowerCase();
+    let lastChar = enteredValue.length - 1;
+    if (enteredValue[lastChar] === "?") {
+        enteredValue = enteredValue.slice(0, lastChar);
+    }
+    return enteredValue;
+}
+
+const saveInputClickHandler = async () => {
+    let enteredValue = cleanInput(newBirdInput.value);
+    if (inputState === "bird") {
+        await saveBird(enteredValue);
+    } else {
+        await saveQuestion(enteredValue);
+    }
+};
+
 const textArea = document.getElementById('prompt');
 const explainArea = document.getElementById("explain_area");
 const dataArea = document.getElementById("data_area");
 const dataView = document.getElementById("data_view");
 
 const searchInput = document.getElementById('bird_search_input');
+const newBirdInput = document.getElementById('new_bird_input');
 
 const yesButton = document.getElementById('yes_btn');
 const noButton = document.getElementById('no_btn');
@@ -168,6 +247,9 @@ const explainButton = document.getElementById('explain_btn');
 const dataButton = document.getElementById('data_btn');
 const restartButton = document.getElementById("restart_btn");
 const showAllButton = document.getElementById('show_all_btn');
-const searchButton = document.getElementById('bird_search_btn');
+const newBirdButton = document.getElementById('new_bird_button');
+const saveInputButton = document.getElementById('save_input');
 
 let initial = true;
+let lastBird = "";
+let inputState = null;

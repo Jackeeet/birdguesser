@@ -1,7 +1,6 @@
 :root {
     --green: #8bc34a;
     --red: #ff5722;
-    --pale-red: #ffa185;
     --grey: #465362;
     --blue: #011936;
 }
@@ -44,6 +43,7 @@ input[type=text] {
 
 .prompt {
     margin-top: 4rem;
+    margin-bottom: 1rem;
 }
 
 .answer {
