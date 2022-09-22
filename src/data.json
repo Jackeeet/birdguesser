@@ -1,62 +1,6 @@
 [
   {
     "bird": "большая синица",
-    "question": "красный"
-  },
-  {
-    "bird": "снегирь",
-    "question": "неровный клюв"
-  },
-  {
-    "bird": "полевой воробей",
-    "question": "хищный"
-  },
-  {
-    "bird": "клест-еловик",
-    "question": null
-  },
-  {
-    "bird": null,
-    "question": null
-  },
-  {
-    "bird": "черный коршун",
-    "question": "ест ос"
-  },
-  {
-    "bird": "сизый голубь",
-    "question": "живет в лесу"
-  },
-  {
-    "bird": null,
-    "question": null
-  },
-  {
-    "bird": null,
-    "question": null
-  },
-  {
-    "bird": null,
-    "question": null
-  },
-  {
-    "bird": null,
-    "question": null
-  },
-  {
-    "bird": "осоед",
-    "question": null
-  },
-  {
-    "bird": null,
-    "question": null
-  },
-  {
-    "bird": "мохноногий сыч",
-    "question": null
-  },
-  {
-    "bird": "щегол",
     "question": null
   }
 ]

@@ -120,7 +120,7 @@ const buildLogString = json => {
         log += `${json[i].text}? ${json[i].answer ? 'Да' : 'Нет'}\n`;
     }
 
-    log += `Следовательно, это ${json[json.length - 1].text}.`;
+    log += `следовательно, это ${json[json.length - 1].text}.`;
     return log;
 }
 
@@ -154,13 +154,18 @@ const showAll = json => {
         const item = json[i];
         if (item.bird === null)
             continue;
-        info += `[${i}] птица: ${item.bird}; вопрос: ${item.question ? item.question + "?" : "нет вопроса"}\n`
+        info += `птица ${i}: ${item.bird}\n` +
+            `вопрос ${i}: ${item.question ? item.question + "?" : "нет вопроса"}\n\n`
     }
-    dataView.innerText = info;
+    let div = document.createElement("div");
+    div.style["text-align"] = "start";
+    div.innerText = info;
+    dataView.appendChild(div);
 };
 
 const showAllClickHandler = async () => {
     searchInput.value = null;
+    dataView.innerText = "";
     if (showAllButton.textContent.trim() === "Все птицы") {
         let response = await fetch("/show/all");
         if (response.ok) {
@@ -172,7 +177,6 @@ const showAllClickHandler = async () => {
         }
     } else {
         showAllButton.textContent = "Все птицы";
-        dataView.innerText = "";
     }
 };
 
@@ -188,14 +192,17 @@ const showBird = json => {
 };
 
 const searchClickHandler = async () => {
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm === "")
+        return;
+
     showAllButton.textContent = "Все птицы";
     dataView.innerText = "";
-    const searchTerm = searchInput.value.trim();
     let response = await fetch(`/show?bird=${searchTerm}`);
     if (response.ok) {
         let json = await response.json();
         if (json.bird === null) {
-            dataView.innerText = "Нет данных";
+            dataView.innerText = "нет данных";
         } else {
             showBird(json);
         }
@@ -242,15 +249,21 @@ const saveQuestion = async enteredValue => {
 
 const cleanInput = input => {
     let enteredValue = input.trim().toLowerCase();
-    let lastChar = enteredValue.length - 1;
-    if (enteredValue[lastChar] === "?") {
-        enteredValue = enteredValue.slice(0, lastChar);
+    if (enteredValue !== "") {
+        let lastChar = enteredValue.length - 1;
+        if (enteredValue[lastChar] === "?") {
+            enteredValue = enteredValue.slice(0, lastChar);
+        }
     }
+
     return enteredValue;
 }
 
 const saveInputClickHandler = async () => {
     let enteredValue = cleanInput(newBirdInput.value);
+    if (enteredValue === "")
+        return;
+
     if (inputState === "bird") {
         await saveBird(enteredValue);
     } else {

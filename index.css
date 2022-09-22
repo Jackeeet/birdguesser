@@ -100,4 +100,6 @@ input[type=text] {
 
 .data__view {
     margin-top: 0.5rem;
+    display: flex;
+    justify-content: center;
 }
