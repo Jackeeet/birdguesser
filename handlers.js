@@ -148,13 +148,25 @@ const dataClickHandler = () => {
     }
 };
 
+const showAll = json => {
+    let info = "";
+    for (let i = 0; i < json.length; i++) {
+        const item = json[i];
+        if (item.bird === null)
+            continue;
+        info += `[${i}] птица: ${item.bird}; вопрос: ${item.question ? item.question + "?" : "нет вопроса"}\n`
+    }
+    dataView.innerText = info;
+};
+
 const showAllClickHandler = async () => {
+    searchInput.value = null;
     if (showAllButton.textContent.trim() === "Все птицы") {
         let response = await fetch("/show/all");
         if (response.ok) {
             let json = await response.json();
             showAllButton.textContent = "Скрыть птиц";
-            dataView.innerText = json;
+            showAll(json);
         } else {
             console.log("showAllClickHandler failed");
         }
@@ -164,7 +176,20 @@ const showAllClickHandler = async () => {
     }
 };
 
+const showBird = json => {
+    dataView.innerText = `Птица: ${json.bird}\n` +
+        `Предыдущая птица: ${json.parent ? json.parent : "нет элемента"}\n` +
+        `Предыдущий вопрос: ${json.parentQuestion ? json.parentQuestion + "?" : "нет вопроса"}\n` +
+        `Предыдущий ответ: ${json.parentAnswer === null ? "нет ответа" : json.parentAnswer ? "Да" : "Нет"}\n` +
+        `Следующий вопрос: ${json.question ? json.question + "?" : "нет вопроса"}\n` +
+        `Варианты ответов:\n` +
+        `   "Да" -> ${json.children[0] ? json.children[0] : "нет ответа"} \n` +
+        `   "Нет" -> ${json.children[1] ? json.children[1] : "нет ответа"}`;
+};
+
 const searchClickHandler = async () => {
+    showAllButton.textContent = "Все птицы";
+    dataView.innerText = "";
     const searchTerm = searchInput.value.trim();
     let response = await fetch(`/show?bird=${searchTerm}`);
     if (response.ok) {
@@ -172,7 +197,7 @@ const searchClickHandler = async () => {
         if (json.bird === null) {
             dataView.innerText = "Нет данных";
         } else {
-            dataView.innerText = json.bird;
+            showBird(json);
         }
     } else {
         console.log("searchClickHandler failed");

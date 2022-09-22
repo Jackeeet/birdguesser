@@ -76,7 +76,7 @@ input[type=text] {
 
 .explain {
     width: 100%;
-    height: 300px;
+    min-height: 150px;
     background: white;
     color: var(--blue);
     border-radius: 10px;
@@ -96,4 +96,8 @@ input[type=text] {
     margin: 0.5rem 2rem 0.5rem 0.5rem;
     background: var(--grey);
     color: white;
+}
+
+.data__view {
+    margin-top: 0.5rem;
 }

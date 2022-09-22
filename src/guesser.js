@@ -91,19 +91,25 @@ export const no = () => {
 
 const storedBirdInfo = index => {
     let parent = null;
+    let parentQuestion = null;
+    let isRightChild = null;
     if (index > 0) {
-        const parentIndex = index % 2 === 0 ? Math.floor((index - 1) / 2) : Math.floor(index / 2);
+        isRightChild = index % 2 === 0;
+        const parentIndex = isRightChild ? Math.floor((index - 1) / 2) : Math.floor(index / 2);
         parent = stored[parentIndex].bird;
+        parentQuestion = stored[parentIndex].question;
     }
+
+    const leftChild = 2 * index + 1 < stored.length ? stored[2 * index + 1].bird : null;
+    const rightChild = 2 * index + 2 < stored.length ? stored[2 * index + 2].bird : null;
 
     return {
         bird: stored[index].bird,
         parent: parent,
+        parentQuestion: parentQuestion,
+        parentAnswer: isRightChild === null ? null : !isRightChild,
         question: stored[index].question,
-        children: [
-            stored[2 * index + 1].bird,
-            stored[2 * index + 2].bird
-        ]
+        children: [leftChild, rightChild]
     }
 }
 
