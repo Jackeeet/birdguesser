@@ -4,7 +4,7 @@ import {yes, no, showLog, showStored, showBird, addBird, addQuestion} from './sr
 const app = express();
 
 app.listen(3000, () => {
-    console.log("app started");
+    console.log("birdguesser is running at localhost:3000");
 });
 
 app.use(express.static("./"));
